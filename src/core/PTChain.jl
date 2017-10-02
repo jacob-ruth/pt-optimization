@@ -4,18 +4,28 @@ using MHChain
 
 export sampleTempering
 
-function sampleTempering(start_x, optimFunction, temps, proposalFunction, iterBetweenSwaps, swapIter)
+function sampleTempering(start_x, optimFunction, temps, proposalFunction, iterBetweenSwaps)
     num_temps = length(temps)
-    out = zeros(shape(start_x)..., num_temps, swapIter)
-    out[:, :, 1] = repmat(start_x, 1, num_temps)
+    out = repmat(start_x, 1, num_temps)
+    func_values = zeros(num_temps)
+    func_values[:] = optimFunction(start_x)
     #TODO: parallelize
-    for i = 2:swapIter
-        for j = 1:num_temps
-            out[:, j, i], values = runChain(out[:,j, i - 1], optimFunction, temps[j], proposalFunction, iterBetweenSwaps, 1)
+    c = 0
+    while minimum(func_values) > 0
+         Threads.@threads for j = 1:num_temps
+            func_values[j], out[:, j] = runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
         end
+        c = c + 1
+        insSwap!(func_values, temps)
     end
-    return out
-    #ptSwaps(x, values, temps)
+
+    return c, out
+end
+
+function insSwap!(values, temps)
+    sort!(temps)
+    ai = sortperm(values)
+    temps = temps[ai]
 end
 
 # function ptSwaps!(x, values, temps)
