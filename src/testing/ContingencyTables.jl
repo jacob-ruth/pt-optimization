@@ -6,7 +6,7 @@ function init_table(col_sums)
     for i in 1:n
         out[1:col_sums[i], i] = ones(col_sums[i])
     end
-    out
+    out[:]
 end
 
 function score_table(table, target_vector)
@@ -41,6 +41,28 @@ function testWorkers(iterations, matrix_size)
 	end
 	out
 end
+
+function simAnneal(n, T0, reps)
+    scores = fill(2, n)
+    temps = T0 * (0.90).^(0:70)
+    f(x) = score_table(x, scores)
+    min_val, x = simulatedAnnealing(init_table(scores), f, temps, swap_columns, fill(reps, length(temps)))
+end
+
+function repSimAnneal(n, T0, reps)
+    a = 100
+    c = 0
+    while a > 0
+        val, x = simAnneal(n, T0, reps)
+        if val < a
+            a = val
+        end
+    c = c + 1
+    end
+    c
+end
+
+
 
 function testMany(largest_size)
 	iterations = 5

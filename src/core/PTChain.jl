@@ -2,24 +2,46 @@ module PTChain
 
 using MHChain
 
-export sampleTempering
+export sampleTempering, simulatedAnnealing
+
+
+function simulatedAnnealing(start_x, optimFunction, temps, proposalFunction, itersAtTemp)
+    assert(length(temps) == length(itersAtTemp))
+    x = start_x
+    min_x = copy(x)
+    min_val = optimFunction(min_x)
+    for i = 1:length(temps)
+        val, x, best_val, best_x = runChain(x, optimFunction, temps[i], proposalFunction, itersAtTemp[i])
+        if best_val < min_val
+            min_val = copy(best_val)
+            min_x = copy(best_x)
+        end
+    end
+    min_val, min_x
+end
 
 function sampleTempering(start_x, optimFunction, temps, proposalFunction, iterBetweenSwaps)
     num_temps = length(temps)
     out = repmat(start_x, 1, num_temps)
     func_values = zeros(num_temps)
     func_values[:] = optimFunction(start_x)
+    min_val =  optimFunction(start_x)
+    min_x = copy(start_x)
     #TODO: parallelize
     c = 0
-    while minimum(func_values) > 0
-         Threads.@threads for j = 1:num_temps
-            func_values[j], out[:, j] = runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
+    while min_val > 0
+        for j = 1:num_temps
+            func_values[j], out[:, j], best_val, best_x = runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
+            if best_val < min_val
+                min_val = copy(best_val)
+                min_x = copy(best_x)
+            end
         end
         c = c + 1
         insSwap!(func_values, temps)
     end
 
-    return c, out
+    return c, min_x
 end
 
 function insSwap!(values, temps)
