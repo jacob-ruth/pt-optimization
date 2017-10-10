@@ -43,10 +43,10 @@ function testWorkers(iterations, matrix_size)
 end
 
 function simAnneal(n, T0, reps)
-    scores = fill(2, n)
-    temps = T0 * (0.90).^(0:70)
+    scores = [1, 2, 2, 2, 3, 4]
+    temps = T0 * (0.90).^(0:5:75)
     f(x) = score_table(x, scores)
-    min_val, x = simulatedAnnealing(init_table(scores), f, temps, swap_columns, fill(reps, length(temps)))
+    min_val, x, stats = simulatedAnnealing(init_table(scores), f, temps, swap_columns, fill(reps, length(temps)))
 end
 
 function repSimAnneal(n, T0, reps)
