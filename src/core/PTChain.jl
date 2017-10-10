@@ -1,6 +1,6 @@
 module PTChain
 
-using MHChain
+import MHChain
 
 export sampleTempering, simulatedAnnealing
 

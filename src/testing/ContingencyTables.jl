@@ -1,4 +1,4 @@
-using PTChain
+import PTChain
 
 function init_table(col_sums)
     n = length(col_sums)
