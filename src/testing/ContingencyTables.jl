@@ -46,7 +46,7 @@ function simAnneal(n, T0, reps)
     scores = [1, 2, 2, 2, 3, 4]
     temps = T0 * (0.90).^(0:5:75)
     f(x) = score_table(x, scores)
-    min_val, x, stats = simulatedAnnealing(init_table(scores), f, temps, swap_columns, fill(reps, length(temps)))
+    min_val, x, stats = PTChain.simulatedAnnealing(init_table(scores), f, temps, swap_columns, fill(reps, length(temps)))
 end
 
 function repSimAnneal(n, T0, reps)
