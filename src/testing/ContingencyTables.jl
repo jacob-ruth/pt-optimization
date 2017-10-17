@@ -1,5 +1,5 @@
-import PTChain
-import MHChain
+using PTChain
+using MHChain
 
 function init_table(col_sums)
     n = length(col_sums)

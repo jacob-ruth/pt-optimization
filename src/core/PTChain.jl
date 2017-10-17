@@ -32,7 +32,7 @@ function sampleTempering(start_x, optimFunction, temps, proposalFunction, iterBe
     c = 0
     while min_val > 0
         for j = 1:num_temps
-            func_values[j], out[:, j], best_val, best_x = runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
+            func_values[j], out[:, j], best_val, best_x = MHChain.runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
             if best_val < min_val
                 min_val = copy(best_val)
                 min_x = copy(best_x)
