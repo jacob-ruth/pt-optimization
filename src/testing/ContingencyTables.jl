@@ -1,4 +1,5 @@
 import PTChain
+import MHChain
 
 function init_table(col_sums)
     n = length(col_sums)
@@ -62,7 +63,11 @@ function repSimAnneal(n, T0, reps)
     c
 end
 
-
+function gradDescend()
+    scores = [1, 2, 2, 2, 3, 4]
+    f(x) = score_table(x, scores)
+    min_val, x, stats = runChain(init_table(scores), f, 0.0, swap_columns, 1000)
+end
 
 function testMany(largest_size)
 	iterations = 5

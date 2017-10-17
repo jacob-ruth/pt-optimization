@@ -1,6 +1,6 @@
 module PTChain
 
-import MHChain
+using MHChain
 
 export sampleTempering, simulatedAnnealing
 
@@ -13,7 +13,6 @@ function simulatedAnnealing(start_x, optimFunction, temps, proposalFunction, ite
     statsDict = []
     for j = 1:length(temps)
         val, x, best_val, best_x, statsDict = runChain(x, optimFunction, temps[j], proposalFunction, itersAtTemp[j])
-
         if best_val < min_val
             min_val = copy(best_val)
             min_x = copy(best_x)

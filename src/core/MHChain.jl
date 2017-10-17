@@ -13,7 +13,7 @@ function runChain(start_x, optimFunction, temp, proposalFunction, iterations)
      for i in 1:iterations
           new_x = proposalFunction(x)
           proposal_value = optimFunction(new_x)
-          if (log(rand()) < (val - proposal_value) / temp)
+          if ((temp == 0 && val > proposal_value) || (log(rand()) < (val - proposal_value) / temp))
                x = new_x
                val = proposal_value
                # record an update
