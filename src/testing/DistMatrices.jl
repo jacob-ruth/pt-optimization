@@ -1,34 +1,41 @@
+using PTChain
+
 function init_random(m, n)
     A = rand(0:1, m, n)
     A[:]
 end
 
-function fancy_score(mat_m, i, j)
-    m, n = size(mat_m)
-    score = 0
-    if mat_m[i,j] == 0
-        return score
+function score_zero(mat_m, i, j, k, l)
+    if mat_m[i, j] == 0 || ((i == k) && (j == l))
+        return 0
+    else
+        return mat_m[k, l]
     end
-    for l = 1:m
-        for k = 1:m
-            score += (2*mat_m[i, j] - 1)*(2*mat_m[l,k] - 1) * cos((i - l)^2 + (j - k)^2)
-        end
-    end
-    score
 end
 
-function zero_score(mat_m, i, j)
-    m, n = size(mat_m)
-    score = 0
-    if mat_m[i,j] == 0
-        return score
+function score_cos(mat_m, i, j, k, l)
+    if ((i == k) && (j == l))
+        return 0
     end
-    for l = 1:m
-        for k = 1:m
-            score += mat_m[i, j]*mat_m[l,k]
-        end
+    if mat_m[i, j] == mat_m[k, l]
+        return cos(sqrt((i - k)^2 + (j - l)^2))
+    else
+        return sin(sqrt((i - k)^2 + (j - l)^2))
     end
-    score
+
+end
+
+function score_near_far(mat_m, i, j, k, l)
+    if ((i == k) && (j == l))
+        return 0
+    end
+    if abs(i - k) + abs(j - l) < 3
+        return (mat_m[i, j] == mat_m[k, l])? 0 : 1
+    elseif abs(i - k) + abs(j - l) < 7
+        return (mat_m[i, j] == mat_m[k, l])? 1 : 0
+    else
+        return 0
+    end
 end
 
 function score_matrix(f, vec_m, m, n)
@@ -36,25 +43,54 @@ function score_matrix(f, vec_m, m, n)
     score = 0
     for i = 1:m
         for j = 1:n
-            score += f(mat_m, i, j)
+            for k = 1:m
+                for l = 1:n
+                    score += f(mat_m, i, j, k, l)
+                end
+            end
         end
     end
     score
 end
 
-function update_one(vec_m)
-    new_prop = copy(vec_m)
-    i = rand(1:length(new_prop))
-    new_prop[i] = (new_prop[i] + 1) % 2
-    new_prop
+function update_one(vec_m, f, m, n)
+    mat_m = reshape(vec_m, m, n)
+    row_change = rand(1:m)
+    col_change = rand(1:n)
+    old_values = 0
+    for i = 1:m
+        for j = 1:n
+            old_values = old_values + f(mat_m, i, j, row_change, col_change) + f(mat_m, row_change, col_change, i, j)
+        end
+    end
+    mat_m[row_change, col_change] = (mat_m[row_change, col_change] + 1) % 2
+    diff = 0
+    for i = 1:m
+        for j = 1:n
+            diff = diff + f(mat_m, i, j, row_change, col_change) + f(mat_m, row_change, col_change, i, j)
+        end
+    end
+    mat_m[:], (diff - old_values)
 end
 
-function swap_two(vec_m, m, n)
-    mat_prop = reshape(vec_m, m, n)
-    row = rand(1:m)
-    col = rand(1:n)
-    swap_vert = rand(-1:1)
-    swap_horz = rand(-1:1)
-    mat_prop[row, col], mat_prop[row + swap_horz][col + swap_vert] = mat_prop[row + swap_horz, col + swap_vert], mat_prop[row, col]
-    vec_m[:]
+function annealSolver()
+    m = 100
+    start = init_random(m, m)
+    reps = 500
+    temps = 75 * (0.90).^(0:1:60)
+    f(x) = score_matrix(score_cos, x, m, m)
+    update(x) = update_one(x, score_cos, m, m)
+    min_val, x, stats, results = simulatedAnnealing(start, f, temps, update, fill(reps, length(temps)))
+    heatmap(reshape(x, m, m))
+    gui()
+    make_gif(results, m, m, start)
+    return min_val
+end
+
+function make_gif(results, m, n, start)
+    plt = heatmap(reshape(start, m, n))
+    iters = size(results, 2)
+    @gif for i=1:iters
+        heatmap(reshape(results[:, i], m, n))
+    end
 end

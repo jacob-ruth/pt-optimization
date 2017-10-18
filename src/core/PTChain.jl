@@ -11,14 +11,17 @@ function simulatedAnnealing(start_x, optimFunction, temps, proposalFunction, ite
     min_x = copy(x)
     min_val = optimFunction(min_x)
     statsDict = []
+    results = zeros(length(x), length(temps))
     for j = 1:length(temps)
         val, x, best_val, best_x, statsDict = runChain(x, optimFunction, temps[j], proposalFunction, itersAtTemp[j])
         if best_val < min_val
             min_val = copy(best_val)
             min_x = copy(best_x)
         end
+        results[:, j] = x
+        print(j)
     end
-    min_val, min_x, statsDict
+    min_val, min_x, statsDict, results
 end
 
 function sampleTempering(start_x, optimFunction, temps, proposalFunction, iterBetweenSwaps)
@@ -51,17 +54,5 @@ function insSwap!(values, temps)
     temps = temps[ai]
     #possibly record a swap update
 end
-
-# function ptSwaps!(x, values, temps)
-#     for i = length(temps):-1:2
-#         Δt = (temps[i] - temps[i-1])
-#         Δe = (values[i] - values[i-1])
-#         if (Δt/Δe > log(rand()))
-#             x[:, i], x[:, i - 1] = x[:,i - 1], x[:,i]
-#             values[i], values[i -1] = values[i - 1], values[i]
-#         end
-#     end
-# end
-
 
 end
