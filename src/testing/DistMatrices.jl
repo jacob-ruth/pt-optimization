@@ -18,9 +18,9 @@ function score_cos(mat_m, i, j, k, l)
         return 0
     end
     if mat_m[i, j] == mat_m[k, l]
-        return cos(sqrt((i - k)^2 + (j - l)^2))
+        return cos(((i - k)^2 + (j - l)^2))
     else
-        return sin(sqrt((i - k)^2 + (j - l)^2))
+        return sin(((i - k)^2 + (j - l)^2))
     end
 
 end
@@ -76,10 +76,10 @@ end
 function annealSolver()
     m = 100
     start = init_random(m, m)
-    reps = 500
-    temps = 75 * (0.90).^(0:1:60)
-    f(x) = score_matrix(score_cos, x, m, m)
-    update(x) = update_one(x, score_cos, m, m)
+    reps = 350
+    temps = 100 * (0.95).^(0:0.5:150)
+    f(x) = score_matrix(score_near_far, x, m, m)
+    update(x) = update_one(x, score_near_far, m, m)
     min_val, x, stats, results = simulatedAnnealing(start, f, temps, update, fill(reps, length(temps)))
     heatmap(reshape(x, m, m))
     gui()
