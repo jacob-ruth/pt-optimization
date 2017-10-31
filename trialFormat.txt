@@ -1,0 +1,20 @@
+Problem Description:
+
+Hyperparameters, start point
+
+Simulated Annealing:
+
+Temperature decay schedule
+Number of swaps at each temperature
+Number of swaps over time
+Number of improvements at each temperature
+Variance of the above between runs- hints if its consistent or not (high variance above means good for INS, maybe)
+Best results
+
+INS:
+
+Temperatures, number of steps before swaps
+Number of improvements for each temperature (how often each temperature triggered a swap)
+Number of those over time (Could be interesting if the swaps were in clusters)
+Behavior of the above over time (does the chain grow decoupled as it finds a local min? Or will te searchers not decouple it)
+Best result

@@ -18,9 +18,9 @@ function score_cos(mat_m, i, j, k, l)
         return 0
     end
     if mat_m[i, j] == mat_m[k, l]
-        return cos(sqrt((i - k)^2 + (j - l)^2))
+        return cos(((i - k)^2 + (j - l)^2))
     else
-        return sin(sqrt((i - k)^2 + (j - l)^2))
+        return sin(((i - k)^2 + (j - l)^2))
     end
 
 end
