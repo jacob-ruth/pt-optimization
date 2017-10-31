@@ -6,6 +6,8 @@ function runChain(start_x, optimFunction, temp, proposalFunction, iterations)
      statsDict = Dict()
      statsDict["changed-value"] = []
      statsDict["new-min"] = []
+     statsDict["reps"] = iterations
+     statsDict["temp"] = temp
      x = start_x
      min_x = copy(start_x)
      best_val = optimFunction(min_x)
@@ -18,7 +20,7 @@ function runChain(start_x, optimFunction, temp, proposalFunction, iterations)
                new_x = new_x[1]
                #assert(proposal_value == optimFunction(new_x))
           else
-               proposal_value = optimFunction(new_x)
+          proposal_value = optimFunction(new_x)
           end
           if ((temp == 0 && val > proposal_value) || (log(rand()) < (val - proposal_value) / temp))
                x = copy(new_x)

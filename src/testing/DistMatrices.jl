@@ -74,23 +74,21 @@ function update_one(vec_m, f, m, n)
 end
 
 function annealSolver()
-    m = 100
+    m = 40
     start = init_random(m, m)
-    reps = 500
-    temps = 75 * (0.90).^(0:1:60)
-    f(x) = score_matrix(score_cos, x, m, m)
-    update(x) = update_one(x, score_cos, m, m)
-    min_val, x, stats, results = simulatedAnnealing(start, f, temps, update, fill(reps, length(temps)))
-    heatmap(reshape(x, m, m))
-    gui()
-    make_gif(results, m, m, start)
-    return min_val
+    reps = 50
+    temps = 50 * (0.90).^(0:1:35)
+    f(x) = score_matrix(score_near_far, x, m, m)
+    update(x) = update_one(x, score_near_far, m, m)
+    min_val, x, stats, results = PTChain.simulatedAnnealing(start, f, temps, update, fill(reps, length(temps)))
+    #make_gif(results, m, m, start)
+    return stats
 end
 
-function make_gif(results, m, n, start)
-    plt = heatmap(reshape(start, m, n))
-    iters = size(results, 2)
-    @gif for i=1:iters
-        heatmap(reshape(results[:, i], m, n))
-    end
-end
+# function make_gif(results, m, n, start)
+#     plt = heatmap(reshape(start, m, n))
+#     iters = size(results, 2)
+#     @gif for i=1:iters
+#         heatmap(reshape(results[:, i], m, n))
+#     end
+# end
