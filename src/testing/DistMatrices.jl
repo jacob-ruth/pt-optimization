@@ -74,10 +74,10 @@ function update_one(vec_m, f, m, n)
 end
 
 function annealSolver()
-    m = 40
+    m = 50
     start = init_random(m, m)
-    reps = 50
-    temps = 50 * (0.90).^(0:1:35)
+    reps = 500
+    temps = 50 * (0.9).^(0:1:70)
     f(x) = score_matrix(score_near_far, x, m, m)
     update(x) = update_one(x, score_near_far, m, m)
     min_val, x, stats, results = PTChain.simulatedAnnealing(start, f, temps, update, fill(reps, length(temps)))
