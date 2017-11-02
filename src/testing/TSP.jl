@@ -1,4 +1,5 @@
 import PTChain
+using PlotChain
 
 function load_sample()
     filename = "si1032.tsp"
@@ -24,7 +25,7 @@ function score_tour(graph, tour)
     for i = 1:(length(tour) - 1)
         val = graph[tour[i], tour[i + 1]] + val
     end
-return val
+    return val
 end
 
 function swap_two(tour)
@@ -45,15 +46,33 @@ function reverse_section(tour)
 end
 
 function proposal_function(tour)
-    if rand() < 0.5
+    #if rand() < 0.5
         return swap_two(tour)
-    else
-        return reverse_section(tour)
-    end
+    #else
+    #    return reverse_section(tour)
+    #end
 end
 
 function sim_tour()
     n = 1032
     start_x = randperm(n)
     mat = load_sample()
+    reps = 1000
+    temps = 100 * (0.95).^(0:0.5:200)
+    f(x) = score_tour(mat, x)
+    update(x) = proposal_function(x)
+    min_val, x, stats, results = PTChain.simulatedAnnealing(start_x, f, temps, update, fill(reps, length(temps)))
+    return stats
+end
+
+function st_tour()
+    n = 1032
+    start_x = randperm(n)
+    mat = load_sample()
+    reps = 50
+    temps = [0, 2, 3]
+    f(x) = score_tour(mat, x)
+    update(x) = proposal_function(x)
+    min_val, x, stats = PTChain.sampleTempering(start_x, f, temps, update, reps, 100000)
+    return stats
 end

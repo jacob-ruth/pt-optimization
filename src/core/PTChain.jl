@@ -31,10 +31,12 @@ function sampleTempering(start_x, optimFunction, temps, proposalFunction, iterBe
     func_values = zeros(num_temps)
     func_values[:] = optimFunction(start_x)
     min_val =  optimFunction(start_x)
+    statsDict = Array{Dict}(num_temps, numSwaps)
     min_x = copy(start_x)
     for i = 1:numSwaps
         for j = 1:num_temps
-            func_values[j], out[:, j], best_val, best_x = MHChain.runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
+            func_values[j], out[:, j], best_val, best_x, stats = runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
+            statsDict[j, i] = stats
             if best_val < min_val
                 min_val = copy(best_val)
                 min_x = copy(best_x)
@@ -43,7 +45,7 @@ function sampleTempering(start_x, optimFunction, temps, proposalFunction, iterBe
         insSwap!(func_values, temps)
     end
 
-    return min_val, min_x
+    return min_val, min_x, statsDict
 end
 
 function insSwap!(values, temps)
