@@ -42,16 +42,16 @@ function sampleTempering(start_x, optimFunction, temps, proposalFunction, iterBe
                 min_x = copy(best_x)
             end
         end
-        insSwap!(func_values, temps)
+        temps = insSwap(func_values, temps)
     end
 
     return min_val, min_x, statsDict
 end
 
-function insSwap!(values, temps)
+function insSwap(values, temps)
     sort!(temps)
     ai = sortperm(values)
-    temps = temps[ai]
+    temps[ai]
     #possibly record a swap update
 end
 

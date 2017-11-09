@@ -1,4 +1,5 @@
-using PTChain
+import PTChain
+import PlotChain
 
 function score_vec(vec)
     score = 0
@@ -14,7 +15,7 @@ function score_vec(vec)
     score
 end
 
-function random_walk(x::Vector{Float64})
+function random_walk(x::Vector{Int64})
     n = length(x)
     direction = rand(1:n)
     y = copy(x)
@@ -46,9 +47,10 @@ function annealSolverTL(dims)
 end
 
 function insSolver(dims)
-    start = randn(dims)
-    reps = 30
-    sampleTempering(start, score_vec, [0, 4, 10], random_walk, reps, 50)
+    start = rand(-10:10, dims)
+    reps = 1
+    min_val, x, stats = PTChain.sampleTempering(start, score_vec, [0, 4, 10], random_walk, reps, 100)
+    return min_val, stats
 end
 
 #calculates the expected number of steps from a position on the function to a max
