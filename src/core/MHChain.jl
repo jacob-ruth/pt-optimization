@@ -15,13 +15,13 @@ function runChain(start_x, optimFunction, temp, proposalFunction, iterations)
      for i in 1:iterations
           new_x = proposalFunction(copy(x))
           proposal_value = 0
-          if length(new_x) == 2
-               proposal_value = new_x[2] + val
-               new_x = new_x[1]
-               #assert(proposal_value == optimFunction(new_x))
-          else
+           if length(new_x) == 2
+                proposal_value = new_x[2] + val
+                new_x = new_x[1]
+                #assert(proposal_value == optimFunction(new_x))
+           else
           proposal_value = optimFunction(new_x)
-          end
+           end
           if ((temp == 0 && val > proposal_value) || (log(rand()) < (val - proposal_value) / temp))
                x = copy(new_x)
                val = proposal_value

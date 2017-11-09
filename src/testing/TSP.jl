@@ -46,11 +46,11 @@ function reverse_section(tour)
 end
 
 function proposal_function(tour)
-    #if rand() < 0.5
+    if rand() < 0.5
         return swap_two(tour)
-    #else
-    #    return reverse_section(tour)
-    #end
+    else
+       return reverse_section(tour)
+    end
 end
 
 function sim_tour()
@@ -69,10 +69,23 @@ function st_tour()
     n = 1032
     start_x = randperm(n)
     mat = load_sample()
-    reps = 50
-    temps = [0, 2, 3]
+    reps = 10
+    temps = collect(0:10:200);
     f(x) = score_tour(mat, x)
     update(x) = proposal_function(x)
-    min_val, x, stats = PTChain.sampleTempering(start_x, f, temps, update, reps, 100000)
-    return stats
+    min_val, x, stats = PTChain.sampleTempering(start_x, f, temps, update, reps, 500)
+    return min_val, stats
+end
+
+function diffs(N)
+    x = randperm(1032)
+    vals = Array{Float64}(N)
+    mat = load_sample()
+    for i = 1:N
+        x = reverse_section(x)
+        vals[i] = score_tour(mat, x)
+    end
+    histogram(diff(vals))
+    gui()
+    vals
 end
