@@ -1,6 +1,37 @@
 import PTChain
 import PlotChain
 
+function score_convex(vec)
+    return sum(abs.(vec))
+end
+
+function min_convex()
+    dims = 100
+    start = randn(dims)*100
+    reps = 12
+    temps = [128, 64, 32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0]
+    min_val, x = PTChain.sampleTempering(start, score_convex, temps, widescaleRandomNoiseTL, reps, 20000)
+    return min_val, x
+end
+
+function min_convex_SA()
+    dims = 100
+    start = randn(dims)*100
+    reps = 20000
+    temps = [128, 64, 32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0]
+    min_val = score_vec(start)
+    min_x = copy(start)
+    for i = 1
+        val, x = PTChain.simulatedAnnealing(start, score_convex, temps, widescaleRandomNoiseTL, fill(reps, length(temps)))
+        if min_val > val
+            min_val = copy(val)
+            min_x = copy(x)
+        end
+    end
+    min_val, min_x
+end
+
+
 function score_vec(vec)
     score = 0
     for i = 1:length(vec)
@@ -15,7 +46,7 @@ function score_vec(vec)
     score
 end
 
-function random_walk(x::Vector{Int64})
+function random_walk(x::Vector)
     n = length(x)
     direction = rand(1:n)
     y = copy(x)
@@ -25,19 +56,19 @@ end
 
 function widescaleRandomNoiseTL(x::Vector{Float64})
     n = length(x)
-    expon = rand()*4.0 - 3.0
+    expon = rand()*12.0 - 4.0
     displacement = randn(n)
     new_x = x + displacement*2^expon
 end
 
 function annealSolverTL(dims)
-    start = randn(dims)
-    reps = 15
-    temps = 10 * (0.90).^(0:2:60)
+    start = rand(-10:10, dims)
+    reps = 100
+    temps = 7*(0.975.^(0:99))
     min_val = score_vec(start)
     min_x = copy(start)
-    for i = 1:3
-        val, x, stats, results = simulatedAnnealing(start, score_vec, temps, widescaleRandomNoiseTL, fill(reps, length(temps)))
+    for i = 1
+        val, x = PTChain.simulatedAnnealing(start, score_vec, temps, random_walk, fill(reps, length(temps)))
         if min_val > val
             min_val = copy(val)
             min_x = copy(x)
@@ -48,9 +79,20 @@ end
 
 function insSolver(dims)
     start = rand(-10:10, dims)
-    reps = 1
-    min_val, x, stats = PTChain.sampleTempering(start, score_vec, [0, 4, 10], random_walk, reps, 100)
-    return min_val, stats
+    reps = 100
+    temps = 7*(0.975.^(0:99))
+    min_val, x = PTChain.sampleTempering(start, score_vec, [0, 0.5, 0.8, 5, 7], random_walk, reps, 100)
+    return min_val, x
+end
+
+function comparison(dims, n)
+    ins_score = zeros(n)
+    anneal_score = zeros(n)
+    for i = 1:n
+        ins_score[i], _ = insSolver(dims)
+        anneal_score[i], _ = annealSolverTL(dims)
+    end
+    return ins_score, anneal_score
 end
 
 #calculates the expected number of steps from a position on the function to a max
