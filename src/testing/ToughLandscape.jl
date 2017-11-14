@@ -5,19 +5,18 @@ function score_convex(vec)
     return sum(abs.(vec))
 end
 
-function min_convex()
+function min_convex(micro_steps, macro_steps)
     dims = 100
     start = randn(dims)*100
-    reps = 12
     temps = [128, 64, 32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0]
-    min_val, x = PTChain.sampleTempering(start, score_convex, temps, widescaleRandomNoiseTL, reps, 20000)
+    min_val, x = PTChain.sampleTempering(start, score_convex, temps, widescaleRandomNoiseTL, micro_steps, macro_steps)
     return min_val, x
 end
 
 function min_convex_SA()
     dims = 100
     start = randn(dims)*100
-    reps = 20000
+    reps = 15000
     temps = [128, 64, 32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0]
     min_val = score_vec(start)
     min_x = copy(start)
@@ -32,13 +31,32 @@ function min_convex_SA()
 end
 
 
+function compare_convex(micro_steps, macro_steps)
+    dims = 100
+    start = randn(dims)*100
+    temps = [128, 64, 32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0]
+    min_val_st, x_st = PTChain.sampleTempering(start, score_convex, temps, widescaleRandomNoiseTL, micro_steps, macro_steps)
+    min_val_gt, x_gt = PTChain.greedyTempering(start, score_convex, temps, widescaleRandomNoiseTL, micro_steps, macro_steps)
+    min_val_sa, x_sa = PTChain.simulatedAnnealing(start, score_convex, temps, widescaleRandomNoiseTL, fill(micro_steps*macro_steps, length(temps)))
+    println("Parallel Tempering: $(min_val_st)")
+    println("Greedy Tempering: $(min_val_gt)")
+    println("Simulated Annealing: $(min_val_sa)")
+end
+
+
 function score_vec(vec)
     score = 0
     for i = 1:length(vec)
-        if abs(vec[i]) <= 4
-            score += abs(vec[i])
+        if vec[i] == 0
+            score += 2
+        elseif vec[i] == -1
+            score += 1
+        elseif vec[i] == 1
+            score += 0
+        elseif abs(vec[i]) <= 4
+            score += 2*abs(vec[i]) - 1
         elseif abs(vec[i]) <= 6
-            score += 8 - abs(vec[i])
+            score += 15 - 2*abs(vec[i])
         else
             score += abs(vec[i]) - 4
         end
@@ -56,13 +74,13 @@ end
 
 function widescaleRandomNoiseTL(x::Vector{Float64})
     n = length(x)
-    expon = rand()*12.0 - 4.0
+    expon = rand()*6 - 4
     displacement = randn(n)
-    new_x = x + displacement*2^expon
+    new_x = x + displacement*10^expon
 end
 
 function annealSolverTL(dims)
-    start = rand(-10:10, dims)
+    start = fill(-7, dims)
     reps = 100
     temps = 7*(0.975.^(0:99))
     min_val = score_vec(start)
@@ -85,14 +103,21 @@ function insSolver(dims)
     return min_val, x
 end
 
-function comparison(dims, n)
-    ins_score = zeros(n)
-    anneal_score = zeros(n)
-    for i = 1:n
-        ins_score[i], _ = insSolver(dims)
-        anneal_score[i], _ = annealSolverTL(dims)
+function compare_score_vec(dims,micro_steps, macro_steps, reps)
+    min_val_st = zeros(reps)
+    min_val_gt = zeros(reps)
+    min_val_sa = zeros(reps)
+    for i = 1:reps
+        start = fill(-7, dims)
+        reps = 100
+        temps = 7 * 0.7.^(0:10)
+        min_val_st[i], _ = PTChain.sampleTempering(start, score_vec, temps, random_walk, micro_steps, macro_steps)
+        min_val_gt[i], _ = PTChain.greedyTempering(start, score_vec, temps, random_walk, micro_steps, macro_steps)
+        min_val_sa[i], _ = PTChain.simulatedAnnealing(start, score_vec, temps, random_walk, fill(micro_steps*macro_steps, length(temps)))
     end
-    return ins_score, anneal_score
+    println("Parallel Tempering: $(min_val_st), mean: $(mean(min_val_st))")
+    println("Greedy Tempering: $(min_val_gt), mean: $(mean(min_val_gt))")
+    println("Simulated Annealing: $(min_val_sa), mean: $(mean(min_val_sa))")
 end
 
 #calculates the expected number of steps from a position on the function to a max
