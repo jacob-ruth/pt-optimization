@@ -13,7 +13,7 @@ function runChain(start_x, optimFunction, temp, proposalFunction, iterations)
      best_val = optimFunction(min_x)
      val = copy(best_val)
      for i in 1:iterations
-          new_x = proposalFunction(copy(x))
+          new_x = proposalFunction(x)
           proposal_value = 0
            if length(new_x) == 2
                 proposal_value = new_x[2] + val

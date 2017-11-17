@@ -27,7 +27,7 @@ function score_tour(graph, tour)
     for i = 1:(length(tour) - 1)
         val = graph[tour[i], tour[i + 1]] + val
     end
-    return val
+    return val + graph[tour[end], tour[1]]
 end
 
 function swap_two(tour, mat)
@@ -36,19 +36,17 @@ function swap_two(tour, mat)
     randtwo = rand(1:length(tour))
     new_tour[randone] = tour[randtwo]
     new_tour[randtwo] = tour[randone]
+    len = length(tour)
+    randone_n = randone == len ? 1 : randone + 1
+    randone_p = randone == 1 ? len : randone - 1
+    randtwo_n = randtwo == len ? 1 : randtwo + 1
+    randtwo_p = randtwo == 1 ? len : randtwo - 1
+
     diff = 0
-    if randone != 1
-        diff += mat[new_tour[randone - 1], new_tour[randone]] - mat[tour[randone - 1], tour[randone]]
-    end
-    if randone != size(mat, 1)
-        diff += mat[new_tour[randone], new_tour[randone + 1]] - mat[tour[randone], tour[randone + 1]]
-    end
-    if randtwo != 1
-        diff += mat[new_tour[randtwo - 1], new_tour[randtwo]] - mat[tour[randtwo - 1], tour[randtwo]]
-    end
-    if randtwo != size(mat, 1)
-        diff += mat[new_tour[randtwo], new_tour[randtwo + 1]] - mat[tour[randtwo], tour[randtwo + 1]]
-    end
+    diff += mat[new_tour[randone_p], new_tour[randone]] - mat[tour[randone_p], tour[randone]]
+    diff += mat[new_tour[randone], new_tour[randone_n]] - mat[tour[randone], tour[randone_n]]
+    diff += mat[new_tour[randtwo_p], new_tour[randtwo]] - mat[tour[randtwo_p], tour[randtwo]]
+    diff += mat[new_tour[randtwo], new_tour[randtwo_n]] - mat[tour[randtwo], tour[randtwo_n]]
 
     new_tour, diff
 end
@@ -57,19 +55,16 @@ function reverse_section(tour, mat)
     new_tour = copy(tour)
     randone, randtwo = minmax(rand(1:length(tour)), rand(1:length(tour)))
     new_tour[randone:randtwo] = tour[randtwo:-1:randone]
+    len = length(tour)
+    randone_n = randone == len ? 1 : randone + 1
+    randone_p = randone == 1 ? len : randone - 1
+    randtwo_n = randtwo == len ? 1 : randtwo + 1
+    randtwo_p = randtwo == 1 ? len : randtwo - 1
     diff = 0
-    if randone != 1
-        diff += mat[new_tour[randone - 1], new_tour[randone]] - mat[tour[randone - 1], tour[randone]]
-    end
-    if randone != size(mat, 1)
-        diff += mat[new_tour[randone], new_tour[randone + 1]] - mat[tour[randone], tour[randone + 1]]
-    end
-    if randtwo != 1
-        diff += mat[new_tour[randtwo - 1], new_tour[randtwo]] - mat[tour[randtwo - 1], tour[randtwo]]
-    end
-    if randtwo != size(mat, 1)
-        diff += mat[new_tour[randtwo], new_tour[randtwo + 1]] - mat[tour[randtwo], tour[randtwo + 1]]
-    end
+    diff += mat[new_tour[randone_p], new_tour[randone]] - mat[tour[randone_p], tour[randone]]
+    diff += mat[new_tour[randone], new_tour[randone_n]] - mat[tour[randone], tour[randone_n]]
+    diff += mat[new_tour[randtwo_p], new_tour[randtwo]] - mat[tour[randtwo_p], tour[randtwo]]
+    diff += mat[new_tour[randtwo], new_tour[randtwo_n]] - mat[tour[randtwo], tour[randtwo_n]]
     new_tour, diff
 end
 
@@ -93,7 +88,7 @@ function sim_tour()
     return stats
 end
 
-function st_tour()
+function st_tour(micro_steps, macro_steps)
     n = 1032
     start_x = randperm(n)
     mat = load_sample()
@@ -101,8 +96,13 @@ function st_tour()
     temps = collect(0:2:100)
     f(x) = score_tour(mat, x)
     update(x) = proposal_function(x, mat)
-    min_val, x = PTChain.sampleTempering(start_x, f, temps, update, reps, 5000000)
-    return min_val, x
+    min_val_st, x_st, p_st = PTChain.sampleTempering(start_x, f, temps, update, micro_steps, macro_steps)
+    min_val_gt, x_gt, p_gt = PTChain.greedyTempering(start_x, f, temps, update, micro_steps, macro_steps)
+    #p_g = plot(p_gt', title="Greedy Tempering")
+    #p_s = plot(p_st', title="Parallel Tempering")
+    #plot(p_g, p_s, layout=(2,1))
+    #gui()
+    return min_val_st, min_val_gt
 end
 
 function diffs(N)

@@ -34,10 +34,14 @@ end
 function compare_convex(micro_steps, macro_steps)
     dims = 100
     start = randn(dims)*100
-    temps = [128, 64, 32, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0]
-    min_val_st, x_st = PTChain.sampleTempering(start, score_convex, temps, widescaleRandomNoiseTL, micro_steps, macro_steps)
-    min_val_gt, x_gt = PTChain.greedyTempering(start, score_convex, temps, widescaleRandomNoiseTL, micro_steps, macro_steps)
+    temps = collect(128*(0.85.^(0:40)))
+    min_val_st, x_st, p_st = PTChain.sampleTempering(start, score_convex, temps, widescaleRandomNoiseTL, micro_steps, macro_steps)
+    min_val_gt, x_gt, p_gt = PTChain.greedyTempering(start, score_convex, reverse(temps), widescaleRandomNoiseTL, micro_steps, macro_steps)
     min_val_sa, x_sa = PTChain.simulatedAnnealing(start, score_convex, temps, widescaleRandomNoiseTL, fill(micro_steps*macro_steps, length(temps)))
+    p_g = plot(p_gt', title="Greedy Tempering")
+    p_s = plot(p_st', title="Parallel Tempering")
+    plot(p_g, p_s, layout=(2,1))
+    gui()
     println("Parallel Tempering: $(min_val_st)")
     println("Greedy Tempering: $(min_val_gt)")
     println("Simulated Annealing: $(min_val_sa)")
@@ -109,15 +113,26 @@ function compare_score_vec(dims,micro_steps, macro_steps, reps)
     min_val_sa = zeros(reps)
     for i = 1:reps
         start = fill(-7, dims)
-        reps = 100
-        temps = 7 * 0.7.^(0:10)
-        min_val_st[i], _ = PTChain.sampleTempering(start, score_vec, temps, random_walk, micro_steps, macro_steps)
-        min_val_gt[i], _ = PTChain.greedyTempering(start, score_vec, temps, random_walk, micro_steps, macro_steps)
+        temps = 15 * 0.7.^(0:15)
+        min_val_st[i], _, _ = PTChain.sampleTempering(start, score_vec, temps, random_walk, micro_steps, macro_steps)
+        min_val_gt[i], _, _ = PTChain.greedyTempering(start, score_vec, temps, random_walk, micro_steps, macro_steps)
         min_val_sa[i], _ = PTChain.simulatedAnnealing(start, score_vec, temps, random_walk, fill(micro_steps*macro_steps, length(temps)))
     end
     println("Parallel Tempering: $(min_val_st), mean: $(mean(min_val_st))")
     println("Greedy Tempering: $(min_val_gt), mean: $(mean(min_val_gt))")
     println("Simulated Annealing: $(min_val_sa), mean: $(mean(min_val_sa))")
+end
+
+function plot_run(dims, micro_steps, macro_steps)
+    start = fill(-7, dims)
+    temps = collect(7*(0.65.^(0:9)))
+    min_val_st, _, plot_data_st = PTChain.sampleTempering(start, score_vec, temps, random_walk, micro_steps, macro_steps)
+    min_val_gt, _, plot_data_gt = PTChain.greedyTempering(start, score_vec, temps, random_walk, micro_steps, macro_steps)
+    p_gt = plot(plot_data_gt', title="Greedy Tempering")
+    p_st = plot(plot_data_st', title="Parallel Tempering")
+    plot(p_gt, p_st, layout=(2,1))
+    gui()
+    min_val_gt, min_val_st
 end
 
 #calculates the expected number of steps from a position on the function to a max

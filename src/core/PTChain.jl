@@ -25,51 +25,50 @@ function simulatedAnnealing(start_x, optimFunction, temps, proposalFunction, ite
     min_val, min_x#, results
 end
 
-function sampleTempering(start_x, optimFunction, temps, proposalFunction, iterBetweenSwaps, numSwaps)
+function sampleTempering(start_x, optimFunction, temps, proposalFunction, iterBetweenSwaps, num_swaps)
     num_temps = length(temps)
-    out = repmat(start_x, 1, num_temps)
+    x = repmat(start_x, 1, num_temps)
     func_values = zeros(num_temps)
     func_values[:] = optimFunction(start_x)
     min_val =  optimFunction(start_x)
-    #statsDict = Array{Dict}(num_temps, numSwaps)
     min_x = copy(start_x)
-    for i = 1:numSwaps
+    plot_vals = zeros(num_temps, num_swaps)
+    for i = 1:num_swaps
         for j = 1:num_temps
-            func_values[j], out[:, j], best_val, best_x = runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
-            #statsDict[j, i] = stats
+            func_values[j], x[:, j], best_val, best_x = runChain(x[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
             if best_val < min_val
                 min_val = copy(best_val)
                 min_x = copy(best_x)
             end
         end
-        #(func_values, out) = insSwap(func_values, out)
-        func_values, out = ptswap(func_values, temps, out)
+        func_values, x = ptswap(func_values, temps, x)
+        plot_vals[:, i] = func_values
     end
-
-    return min_val, min_x#, statsDict
+    return min_val, min_x, plot_vals
 end
 
-function greedyTempering(start_x, optimFunction, temps, proposalFunction, iterBetweenSwaps, numSwaps)
+function greedyTempering(start_x, optimFunction, temps, proposalFunction, iterBetweenSwaps, num_swaps)
+    sort!(temps)
     num_temps = length(temps)
     out = repmat(start_x, 1, num_temps)
     func_values = zeros(num_temps)
     func_values[:] = optimFunction(start_x)
     min_val =  optimFunction(start_x)
-    #statsDict = Array{Dict}(num_temps, numSwaps)
+    plot_vals = zeros(num_temps, num_swaps)
     min_x = copy(start_x)
-    for i = 1:numSwaps
+    for i = 1:num_swaps
         for j = 1:num_temps
             func_values[j], out[:, j], best_val, best_x = runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
-            #statsDict[j, i] = stats
             if best_val < min_val
                 min_val = copy(best_val)
                 min_x = copy(best_x)
             end
         end
+        plot_vals[:, i] = func_values
         (func_values, out) = greedyswap(func_values, out)
     end
 
-    return min_val, min_x#, statsDict
+    return min_val, min_x, plot_vals
 end
 
 
@@ -80,11 +79,10 @@ function greedyswap(values, x)
 end
 
 function ptswap(values, temps, out)
-    for i = 1:(length(temps) - 1)
-        if log(rand()) < (values[i + 1] - values[i])*((1/temps[i + 1]) - (1/temps[i]))
-            values[i], values[i + 1] = values[i + 1], values[i]
-            out[:, i], out[:, i + 1] = out[:, i + 1], out[:, i]
-        end
+    i = rand(1:(length(temps)  - 1))
+    if log(rand()) < (values[i + 1] - values[i])*((1/temps[i + 1]) - (1/temps[i]))
+        values[i], values[i + 1] = values[i + 1], values[i]
+        out[:, i], out[:, i + 1] = out[:, i + 1], out[:, i]
     end
     values, out
 end
