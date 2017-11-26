@@ -1,14 +1,6 @@
-using PTChain
-using ProposalFunctions
+import PTChain
+import ProposalFunctions
 
-f(x) = x[1]^2 + x[2]^2
-@timev x = sampleTempering(randn(2), f, [0.1, 1], widescaleRandomNoise, 5, 10000)
+f(x) = sum(x.^2)
 
-function g(x)
-    i = 0
-    while i < x
-        i = i + 1
-        k = rand()
-    end
-    i
-end
+@timev x = PTChain.sampleTempering(randn(3), f, [0.1, 1], ProposalFunctions.widescaleRandomNoise, 5, 10000)

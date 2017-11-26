@@ -117,3 +117,6 @@ function diffs(N)
     gui()
     vals
 end
+
+
+println(sim_tour())

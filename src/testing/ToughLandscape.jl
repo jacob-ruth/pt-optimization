@@ -128,10 +128,10 @@ function plot_run(dims, micro_steps, macro_steps)
     temps = collect(7*(0.65.^(0:9)))
     min_val_st, _, plot_data_st = PTChain.sampleTempering(start, score_vec, temps, random_walk, micro_steps, macro_steps)
     min_val_gt, _, plot_data_gt = PTChain.greedyTempering(start, score_vec, temps, random_walk, micro_steps, macro_steps)
-    p_gt = plot(plot_data_gt', title="Greedy Tempering")
-    p_st = plot(plot_data_st', title="Parallel Tempering")
-    plot(p_gt, p_st, layout=(2,1))
-    gui()
+    #p_gt = plot(plot_data_gt', title="Greedy Tempering")
+    #p_st = plot(plot_data_st', title="Parallel Tempering")
+    #plot(p_gt, p_st, layout=(2,1))
+    #gui()
     min_val_gt, min_val_st
 end
 
@@ -152,3 +152,5 @@ function rand_walk_solver(steps, temp, ΔF=1)
     mat[steps, steps] = 1
     return inv(mat)*vec
 end
+
+compare_score_vec(20, 500, 100, 1)
