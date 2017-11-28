@@ -27,23 +27,44 @@ function blockingGreedy(start_x, optimFunction, temps, proposalFunction, iterBet
 	    @sync @parallel for j = 1:num_temps
 	        fv, out[:, j], best_val, best_x = PTChain.runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
 			func_values[j] = fv
-			println("fv: $(fv)" )
-			println(typeof(func_values))
 			if best_val < min_val[j]
 	            min_val[j] = copy(best_val)
 	            min_x[:,j] = copy(best_x)
 	        end
-			println(j)
 	    end
 	    plot_vals[:, i] = func_values
-		println(func_values)
-	    (func_values, out) = PTChain.greedyswap(func_values, out)
-		println(func_values)
-		println(".............")
+	    out = greedyswapShared(func_values, out)
 	end
 
 	return min_val, min_x, plot_vals
 end
+
+function blockingPINS(start_x, optimFunction, temps, proposalFunction, iterBetweenSwaps, num_swaps)
+	sort!(temps)
+	num_temps = length(temps)
+	out = SharedArray(repmat(start_x, 1, num_temps))
+	func_values = SharedArray(zeros(num_temps))
+	func_values[:] = optimFunction(start_x)
+	min_val = SharedArray(zeros(num_temps))
+	min_val[:] = optimFunction(start_x)
+	plot_vals = zeros(num_temps, num_swaps)
+	min_x = copy(out)
+	for i = 1:num_swaps
+	    @sync @parallel for j = 1:num_temps
+	        fv, out[:, j], best_val, best_x = PTChain.runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
+			func_values[j] = fv
+			if best_val < min_val[j]
+	            min_val[j] = copy(best_val)
+	            min_x[:,j] = copy(best_x)
+	        end
+	    end
+	    plot_vals[:, i] = func_values
+	    out = greedyswapShared(func_values, out)
+	end
+
+	return min_val, min_x, plot_vals
+end
+
 
 function epchains(start_x, optimFunction, temps, proposalFunction, iterBetweenSwaps, num_swaps)
 	sort!(temps)
@@ -86,4 +107,13 @@ function greedyChain(start_x, optimFunction, temp, proposalFunction, iterBetween
 		#set a flag on this processor that it can be swapped, and check to see if the other processors are done.  Potential Race condition? Expecting that the _last_ processor in this group is able to see that everyone is done.  maybe use a SharedArray?
 	end
 end
+
+function greedyswapShared(values, x)
+    ai = sortperm(values)
+    out = x[:, ai]
+    permute!(values, ai)
+    SharedArray(out)
+end
+
+
 end
