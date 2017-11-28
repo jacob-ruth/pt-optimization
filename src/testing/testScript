@@ -1,0 +1,3 @@
+#!/bin/bash
+
+time /home/jr85/Thesis/julia-0d7248e2ff/bin/julia /home/jr85/Thesis/pt-optimization/src/testing/annealBenchMark.jl 
