@@ -12,9 +12,12 @@ end
 	sum(abs.(x))
 end
 
-dims = 100
+dims = 20
 start_x = 1000*randn(dims)
-reps = 200000
+reps = 5
 temps = 128*(0.5.^(0:19));
-val, x = POPT.pSimAnneal(16, start_x, f, temps, widescaleRandomNoiseTL, fill(reps, length(temps)))
+#val, x = POPT.pSimAnneal(16, start_x, f, temps, widescaleRandomNoiseTL, fill(reps, length(temps)))
+@time val_gt, x_gt, p_val_gt = PTChain.greedyTempering(start_x, f, [32, 16, 8, 0], widescaleRandomNoiseTL, 100, reps)
+@time val_bg, x_bg, p_val_bg = POPT.blockingGreedy(start_x, f, [32, 16, 8, 0], widescaleRandomNoiseTL, 100, reps)
+@time val_ep, x_ep, p_val_ep = POPT.epchains(start_x, f, [32, 16, 8, 0], widescaleRandomNoiseTL, 100, reps)
 println(val)
