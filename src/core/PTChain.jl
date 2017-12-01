@@ -91,6 +91,7 @@ function greedyTempering(start_x, optimFunction, temps, proposalFunction, iterBe
     min_val =  optimFunction(start_x)
     plot_vals = zeros(num_temps, num_swaps)
     min_x = copy(start_x)
+    swaps_made = 0
     for i = 1:num_swaps
         for j = 1:num_temps
             func_values[j], out[:, j], best_val, best_x = runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
@@ -100,11 +101,54 @@ function greedyTempering(start_x, optimFunction, temps, proposalFunction, iterBe
             end
         end
         plot_vals[:, i] = func_values
-        (func_values, out) = greedyswap(func_values, out)
+        (new_fv, out) = greedyswap(func_values, out)
+      if new_fv != func_values
+        swaps_made = swaps_made + 1
+      end
+      func_vals = new_fv
     end
+    return min_val, min_x, plot_vals, swaps_made
+end
 
+
+#just cycles through each of the swap schemes proposed
+function partialGreedyTempering(start_x, optimFunction, temps, proposalFunction, iterBetweenSwaps, num_swaps, swapSchemes)
+    sort!(temps)
+    num_temps = length(temps)
+    num_swap_schemes = length(swapSchemes)
+    out = SharedArray(repmat(start_x, 1, num_temps))
+    func_values = zeros(num_temps)
+    func_values[:] = optimFunction(start_x)
+    min_val =  optimFunction(start_x)
+    plot_vals = zeros(num_temps, num_swaps)
+    min_x = copy(start_x)
+    current_swap_scheme = 1
+    for i = 1:num_swaps
+        #update each chain
+        for j = 1:num_temps
+            func_values[j], out[:, j], best_val, best_x = runChain(out[:,j], optimFunction, temps[j], proposalFunction, iterBetweenSwaps)
+            if best_val < min_val
+                min_val = copy(best_val)
+                min_x = copy(best_x)
+            end
+        end
+        plot_vals[:, i] = func_values
+        #carry out the swapping according to the plan
+        swap_plan = swapSchemes[current_swap_scheme]
+        for j = 1:length(swap_plan)
+            func_values[swap_plan[j]], out[:, swap_plan[j]] = greedyswap(func_values[swap_plan[j]], out[:, swap_plan[j]])
+        end
+
+        #increment swap schemes
+        if current_swap_scheme == num_swap_schemes
+            current_swap_scheme = 1
+        else
+            current_swap_scheme += 1
+        end
+    end
     return min_val, min_x, plot_vals
 end
+
 
 
 function greedyswap(values, x)
